@@ -37,6 +37,9 @@
 		this.$element = $(element);
 		this.options = $.extend({}, $.fn.wizard.defaults, options);
 		this.options.disablePreviousStep = (this.$element.attr('data-restrict') === 'previous') ? true : this.options.disablePreviousStep;
+        if (!!this.$element.data( 'preserve-completed-steps' )) {
+            this.options.preserveCompletedSteps = this.$element.data( 'preserve-completed-steps' );
+        }        
 		this.currentStep = this.options.selectedItem.step;
 		this.numSteps = this.$element.find('.steps li').length;
 		this.$prevBtn = this.$element.find('button.btn-prev');
@@ -190,10 +193,21 @@
 				this.$nextBtn.text(text).append(kids);
 			}
 
+            // Set currently active step as "complete"
+            if (this.options.preserveCompletedSteps) {
+                var $activeStep = this.$element.find( '.steps li.active' );
+                $activeStep.addClass('complete');
+                $activeStep.find( 'span.badge' ).addClass( 'badge-success' );
+            }
+
 			// reset classes for all steps
 			var $steps = this.$element.find('.steps li');
-			$steps.removeClass('active').removeClass('complete');
-			$steps.find('span.badge').removeClass('badge-info').removeClass('badge-success');
+			$steps.removeClass('active');
+			$steps.find('span.badge').removeClass('badge-info');
+            if (!this.options.preserveCompletedSteps) {
+                $steps.removeClass( 'complete' );
+                $steps.find( 'span.badge' ).removeClass( 'badge-success' );
+            }            
 
 			// set class for all previous steps
 			var prevSelector = '.steps li:lt(' + (this.currentStep - 1) + ')';
@@ -422,6 +436,7 @@
 	};
 
 	$.fn.wizard.defaults = {
+        preserveCompletedSteps: false,    
 		disablePreviousStep: false,
 		selectedItem: {
 			step: -1
